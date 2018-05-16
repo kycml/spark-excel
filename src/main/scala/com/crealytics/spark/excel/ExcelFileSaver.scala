@@ -1,8 +1,6 @@
 package com.crealytics.spark.excel
 
-import java.io.BufferedOutputStream
-import java.sql.Timestamp
-import java.text.SimpleDateFormat
+import java.io.{BufferedOutputStream, IOException, OutputStream}
 
 import com.norbitltd.spoiwo.natures.xlsx.Model2XlsxConversions._
 import com.norbitltd.spoiwo.model._
@@ -71,11 +69,17 @@ class ExcelFileSaver(fs: FileSystem) {
     case b: java.math.BigDecimal => Cell(BigDecimal(b))
     case null => Cell.Empty
   }
-  def autoClose[A <: AutoCloseable, B](closeable: A)(fun: (A) => B): B = {
+  def autoClose[A <: OutputStream, B](closeable: A)(func: (A) => B): Unit = {
     try {
-      fun(closeable)
+      func(closeable)
     } finally {
-      closeable.close()
+      try {
+        closeable.close()
+      } catch {
+        case e: Exception => {
+          e.printStackTrace()
+        }
+      }
     }
   }
 }
